@@ -5,7 +5,7 @@ Pure Ruby [GeoIP2 MaxMind DB](http://maxmind.github.io/MaxMind-DB/) reader, whic
 You can find more information about the GeoIP2 database [here](http://dev.maxmind.com/geoip/geoip2/downloadable/).
 
 [![Gem Version](https://badge.fury.io/rb/maxminddb.svg)](http://badge.fury.io/rb/maxminddb)
-[![Build Status](https://travis-ci.org/yhirose/maxminddb.svg?branch=master)](https://travis-ci.org/yhirose/maxminddb)
+[![CI](https://github.com/yhirose/maxminddb/actions/workflows/ci.yml/badge.svg)](https://github.com/yhirose/maxminddb/actions/workflows/ci.yml)
 [![Code Climate](https://codeclimate.com/github/yhirose/maxminddb.svg)](https://codeclimate.com/github/yhirose/maxminddb)
 
 ## Installation

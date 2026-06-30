@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: ['3.0', '3.1', '3.2', '3.3', '3.4']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+
+      # The GeoLite2 databases are downloaded by the `ensure_maxmind_files`
+      # Rake task. Cache them per ISO week so the test suite runs against a
+      # stable snapshot within a week and refreshes automatically afterwards.
+      - name: Compute cache key
+        id: cache-key
+        run: echo "week=$(date -u +%Y-%U)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache MaxMind databases
+        uses: actions/cache@v4
+        with:
+          path: spec/cache
+          key: maxmind-db-${{ steps.cache-key.outputs.week }}
+
+      - name: Run tests
+        env:
+          MAXMIND_ACCOUNT_ID: ${{ secrets.MAXMIND_ACCOUNT_ID }}
+          MAXMIND_API_KEY: ${{ secrets.MAXMIND_API_KEY }}
+        run: bundle exec rake

@@ -3,38 +3,46 @@ require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new(:spec)
 
-desc "Downloads maxmind free DBs if required"
-task :ensure_maxmind_files do
-  unless File.exist?('spec/cache/GeoLite2-City.mmdb')
-    os = %x{uname}.strip
-    options = os == 'Linux' ? '--wildcards' : ''
-    sh "curl 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&suffix=tar.gz&license_key=#{ENV['API_KEY']}' -o spec/cache/GeoLite2-City.mmdb.tar.gz"
-    sh "tar zxvf spec/cache/GeoLite2-City.mmdb.tar.gz #{options} *.mmdb"
-    src = %x{tar ztf spec/cache/GeoLite2-City.mmdb.tar.gz #{options} *.mmdb}.strip
-    dir = %x{dirname `tar ztf spec/cache/GeoLite2-City.mmdb.tar.gz #{options} *.mmdb`}
-    fname = %x{basename `tar ztf spec/cache/GeoLite2-City.mmdb.tar.gz #{options} *.mmdb`}
-    dst = ('spec/cache/' + fname).strip
-    sh "mv #{src} #{dst}"
-    sh "rmdir #{dir}"
-    sh 'rm spec/cache/GeoLite2-City.mmdb.tar.gz'
+# Downloads a GeoLite2 database into spec/cache using MaxMind's direct
+# download endpoint, which authenticates with an account ID and a license key
+# via HTTP basic auth.
+# See https://dev.maxmind.com/geoip/updating-databases#directly-downloading-databases
+def download_maxmind_db(edition)
+  dest = "spec/cache/#{edition}.mmdb"
+  return if File.exist?(dest)
+
+  account_id = ENV.fetch('MAXMIND_ACCOUNT_ID') do
+    abort 'MAXMIND_ACCOUNT_ID is required to download MaxMind databases'
+  end
+  license_key = ENV.fetch('MAXMIND_API_KEY') do
+    abort 'MAXMIND_API_KEY is required to download MaxMind databases'
   end
 
-  unless File.exist?('spec/cache/GeoLite2-Country.mmdb')
-    os = %x{uname}.strip
-    options = os == 'Linux' ? '--wildcards' : ''
-    sh "curl 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&suffix=tar.gz&license_key=#{ENV['API_KEY']}' -o spec/cache/GeoLite2-Country.mmdb.tar.gz"
-    sh "tar zxvf spec/cache/GeoLite2-Country.mmdb.tar.gz #{options} *.mmdb"
-    src = %x{tar ztf spec/cache/GeoLite2-Country.mmdb.tar.gz #{options} *.mmdb}.strip
-    dir = %x{dirname `tar ztf spec/cache/GeoLite2-Country.mmdb.tar.gz #{options} *.mmdb`}
-    fname = %x{basename `tar ztf spec/cache/GeoLite2-Country.mmdb.tar.gz #{options} *.mmdb`}
-    dst = ('spec/cache/' + fname).strip
-    sh "mv #{src} #{dst}"
-    sh "rmdir #{dir}"
-    sh 'rm spec/cache/GeoLite2-Country.mmdb.tar.gz'
+  url = "https://download.maxmind.com/geoip/databases/#{edition}/download?suffix=tar.gz"
+  tarball = "spec/cache/#{edition}.tar.gz"
+
+  sh "curl --fail --silent --show-error --location" \
+     " --user '#{account_id}:#{license_key}'" \
+     " --output '#{tarball}' '#{url}'"
+
+  # The archive contains a dated directory, e.g.
+  # GeoLite2-Country_20240101/GeoLite2-Country.mmdb
+  member = %x{tar tzf #{tarball}}.lines.map(&:strip).find do |entry|
+    entry.end_with?("#{edition}.mmdb")
   end
+  abort "#{edition}.mmdb not found in #{tarball}" unless member
+
+  sh "tar xzf #{tarball} -C spec/cache --strip-components=1 '#{member}'"
+  rm tarball
 end
 
-desc "Downloads maxmind free DBs if required and runs all specs"
+desc "Downloads MaxMind free DBs if required"
+task :ensure_maxmind_files do
+  download_maxmind_db('GeoLite2-City')
+  download_maxmind_db('GeoLite2-Country')
+end
+
+desc "Downloads MaxMind free DBs if required and runs all specs"
 task ensure_maxmind_files_and_spec: [:ensure_maxmind_files, :spec]
 
 task default: :ensure_maxmind_files_and_spec
