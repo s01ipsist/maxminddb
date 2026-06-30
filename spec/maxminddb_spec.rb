@@ -23,12 +23,12 @@ describe MaxMindDB do
           expect(city_db.lookup(ip)).to be_found
         end
 
-        it 'returns Mountain View as the English name' do
-          expect(city_db.lookup(ip).city.name).to eq('Mountain View')
+        it 'returns San Francisco as the English name' do
+          expect(city_db.lookup(ip).city.name).to eq('San Francisco')
         end
 
-        it 'returns -122.0748 as the longitude' do
-          expect(city_db.lookup(ip).location.longitude).to eq(-122.0748)
+        it 'returns -122.4353 as the longitude' do
+          expect(city_db.lookup(ip).location.longitude).to eq(-122.4353)
         end
 
         it 'returns nil for is_anonymous_proxy' do
@@ -47,8 +47,8 @@ describe MaxMindDB do
           expect(country_db.lookup(ip).country.iso_code).to eq('US')
         end
 
-        it 'returns 4.78.128.0/17 as network' do
-          expect(country_db.lookup(ip).network).to eq('4.78.128.0/17')
+        it 'returns ::ffff:4.78.128.0/113 as network' do
+          expect(country_db.lookup(ip).network).to eq('::ffff:4.78.128.0/113')
         end
 
         context 'as a Integer' do
@@ -58,8 +58,8 @@ describe MaxMindDB do
             expect(city_db.lookup(integer_ip)).to be_kind_of(MaxMindDB::Result)
           end
 
-          it 'returns Mountain View as the English name' do
-            expect(city_db.lookup(ip).city.name).to eq('Mountain View')
+          it 'returns San Francisco as the English name' do
+            expect(city_db.lookup(ip).city.name).to eq('San Francisco')
           end
 
           it 'returns United States as the English country name' do
@@ -156,12 +156,12 @@ describe MaxMindDB do
             expect(city_db.lookup(ip)).to be_found
           end
 
-          it 'returns Mountain View as the English name' do
-            expect(city_db.lookup(ip).city.name).to eq('Mountain View')
+          it 'returns San Francisco as the English name' do
+            expect(city_db.lookup(ip).city.name).to eq('San Francisco')
           end
 
-          it 'returns -122.0748 as the longitude' do
-            expect(city_db.lookup(ip).location.longitude).to eq(-122.0748)
+          it 'returns -122.4353 as the longitude' do
+            expect(city_db.lookup(ip).location.longitude).to eq(-122.4353)
           end
 
           it 'returns nil for is_anonymous_proxy' do
