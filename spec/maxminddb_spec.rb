@@ -27,8 +27,12 @@ describe MaxMindDB do
           expect(city_db.lookup(ip).city.name).to eq('San Francisco')
         end
 
-        it 'returns -122.4353 as the longitude' do
-          expect(city_db.lookup(ip).location.longitude).to eq(-122.4353)
+        # GeoLite2 is republished weekly, so assert the shape and a plausible
+        # range rather than an exact coordinate that drifts between releases.
+        it 'returns a West-Coast US longitude' do
+          longitude = city_db.lookup(ip).location.longitude
+          expect(longitude).to be_a(Float)
+          expect(longitude).to be_between(-125, -115)
         end
 
         it 'returns nil for is_anonymous_proxy' do
@@ -160,8 +164,10 @@ describe MaxMindDB do
             expect(city_db.lookup(ip).city.name).to eq('San Francisco')
           end
 
-          it 'returns -122.4353 as the longitude' do
-            expect(city_db.lookup(ip).location.longitude).to eq(-122.4353)
+          it 'returns a West-Coast US longitude' do
+            longitude = city_db.lookup(ip).location.longitude
+            expect(longitude).to be_a(Float)
+            expect(longitude).to be_between(-125, -115)
           end
 
           it 'returns nil for is_anonymous_proxy' do

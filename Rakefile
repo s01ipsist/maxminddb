@@ -21,9 +21,14 @@ def download_maxmind_db(edition)
   url = "https://download.maxmind.com/geoip/databases/#{edition}/download?suffix=tar.gz"
   tarball = "spec/cache/#{edition}.tar.gz"
 
-  sh "curl --fail --silent --show-error --location" \
-     " --user '#{account_id}:#{license_key}'" \
-     " --output '#{tarball}' '#{url}'"
+  # Pass the credentials to curl through the environment rather than the
+  # command line so they never appear in the process argument list (visible via
+  # `ps`) or in any echoed command, keeping the CI runner's secret masking
+  # effective.
+  sh({ 'MAXMIND_CREDS' => "#{account_id}:#{license_key}" },
+     "curl --fail --silent --show-error --location" \
+     ' --user "$MAXMIND_CREDS"' \
+     " --output '#{tarball}' '#{url}'")
 
   # The archive contains a dated directory, e.g.
   # GeoLite2-Country_20240101/GeoLite2-Country.mmdb
